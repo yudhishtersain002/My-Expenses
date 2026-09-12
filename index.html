@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Expenses</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    color: #111;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: white;
+    padding: 18px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+input, select, textarea, button {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+button {
+    border: none;
+    background: #111;
+    color: white;
+    font-weight: 600;
+    margin-top: 15px;
+}
+
+.total {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.expense {
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.expense:last-child {
+    border-bottom: none;
+}
+
+.expense-top {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.expense-info {
+    color: #777;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.delete {
+    background: #eee;
+    color: #d00;
+    padding: 7px;
+    width: auto;
+    margin-top: 8px;
+}
+
+.export {
+    background: #16803c;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>💰 My Expenses</h1>
+    <div class="subtitle">Daily expense tracker</div>
+
+    <div class="card">
+        <div>Total This Month</div>
+        <div class="total">AED <span id="total">0.00</span></div>
+    </div>
+
+    <div class="card">
+
+        <h2>Add Expense</h2>
+
+        <label>Date</label>
+        <input type="date" id="date">
+
+        <label>Category</label>
+        <select id="category">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Rent</option>
+            <option>Bills</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+            <option>Other</option>
+        </select>
+
+        <label>Amount (AED)</label>
+        <input type="number" id="amount" placeholder="0.00" step="0.01">
+
+        <label>Note</label>
+        <textarea id="note" rows="2" placeholder="What did you spend on?"></textarea>
+
+        <button onclick="addExpense()">Add Expense</button>
+
+    </div>
+
+    <div class="card">
+        <h2>Expenses</h2>
+        <div id="expenseList"></div>
+    </div>
+
+    <button class="export" onclick="exportCSV()">
+        📥 Export to Excel
+    </button>
+
+</div>
+
+<script>
+
+let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+const dateInput = document.getElementById("date");
+
+dateInput.value = new Date().toISOString().split("T")[0];
+
+function saveExpenses() {
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+}
+
+function addExpense() {
+
+    const date = document.getElementById("date").value;
+    const category = document.getElementById("category").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const note = document.getElementById("note").value;
+
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    expenses.push({
+        date,
+        category,
+        amount,
+        note
+    });
+
+    saveExpenses();
+
+    document.getElementById("amount").value = "";
+    document.getElementById("note").value = "";
+
+    displayExpenses();
+}
+
+function deleteExpense(index) {
+
+    if (confirm("Delete this expense?")) {
+        expenses.splice(index, 1);
+        saveExpenses();
+        displayExpenses();
+    }
+}
+
+function displayExpenses() {
+
+    const list = document.getElementById("expenseList");
+
+    list.innerHTML = "";
+
+    let total = 0;
+
+    expenses.forEach((expense, index) => {
+
+        total += expense.amount;
+
+        list.innerHTML += `
+        <div class="expense">
+
+            <div class="expense-top">
+                <span>${expense.category}</span>
+                <span>AED ${expense.amount.toFixed(2)}</span>
+            </div>
+
+            <div class="expense-info">
+                ${expense.date}
+                ${expense.note ? " • " + expense.note : ""}
+            </div>
+
+            <button class="delete" onclick="deleteExpense(${index})">
+                Delete
+            </button>
+
+        </div>
+        `;
+    });
+
+    document.getElementById("total").textContent = total.toFixed(2);
+
+    if (expenses.length === 0) {
+        list.innerHTML = "<p style='color:#777'>No expenses yet.</p>";
+    }
+}
+
+function exportCSV() {
+
+    if (expenses.length === 0) {
+        alert("No expenses to export.");
+        return;
+    }
+
+    let csv = "Date,Category,Amount,Note\n";
+
+    expenses.forEach(e => {
+
+        csv += `"${e.date}","${e.category}","${e.amount}","${e.note}"\n`;
+
+    });
+
+    const blob = new Blob([csv], {
+        type: "text/csv"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "my-expenses.csv";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+displayExpenses();
+
+</script>
+
+</body>
+</html>
