@@ -1,2045 +1,1106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
-
-<meta name="theme-color" content="#f5f5f7">
-
-<title>My Expenses</title>
-
-<!-- Excel Export Library -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-<style>
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    margin: 0;
-    background: #f5f5f7;
-    color: #111;
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        "Segoe UI",
-        Arial,
-        sans-serif;
-}
-
-button,
-input,
-select,
-textarea {
-    font-family: inherit;
-}
-
-button {
-    cursor: pointer;
-}
-
-.app {
-    width: 100%;
-    max-width: 900px;
-    margin: auto;
-    padding: 35px 18px 60px;
-}
-
-/* HEADER */
-
-.header {
-    margin-bottom: 24px;
-}
-
-.title {
-    margin: 0;
-    font-size: 38px;
-    font-weight: 800;
-    letter-spacing: -1.5px;
-}
-
-.subtitle {
-    margin: 5px 0 0;
-    font-size: 18px;
-    color: #777;
-}
-
-/* TOTAL */
-
-.total-card {
-    background: white;
-    border-radius: 25px;
-    padding: 28px;
-    margin-bottom: 22px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
-}
-
-.total-label {
-    font-size: 18px;
-    margin-bottom: 5px;
-}
-
-.total {
-    font-size: 44px;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
-
-/* QUICK ADD */
-
-.card {
-    background: white;
-    border-radius: 25px;
-    padding: 28px;
-    margin-bottom: 22px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.06);
-}
-
-.card-title {
-    margin: 0 0 22px;
-    font-size: 29px;
-    font-weight: 800;
-    letter-spacing: -.7px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 17px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.full {
-    grid-column: 1 / -1;
-}
-
-label {
-    font-size: 17px;
-    font-weight: 700;
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    border: 1px solid #d8d8d8;
-    background: #fafafa;
-    border-radius: 17px;
-    padding: 16px;
-    font-size: 17px;
-    outline: none;
-    color: #111;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    background: white;
-    border-color: #111;
-}
-
-textarea {
-    min-height: 90px;
-    resize: vertical;
-}
-
-.datetime-row {
-    display: flex;
-    gap: 9px;
-}
-
-.datetime-row input {
-    flex: 1;
-}
-
-.reset-time {
-    width: 52px;
-    border: 0;
-    border-radius: 16px;
-    background: #eeeeee;
-    font-size: 21px;
-}
-
-.current-time {
-    font-size: 13px;
-    color: #888;
-}
-
-.add-button {
-    width: 100%;
-    margin-top: 20px;
-    padding: 17px;
-    border: 0;
-    border-radius: 17px;
-    background: #111;
-    color: white;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.add-button:active {
-    transform: scale(.98);
-}
-
-/* MONTHLY */
-
-.monthly-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-}
-
-.monthly-title-row .card-title {
-    margin-bottom: 0;
-}
-
-/* EXPORT BUTTON */
-
-.export-button {
-    border: 0;
-    background: #111;
-    color: white;
-    padding: 11px 15px;
-    border-radius: 13px;
-    font-size: 14px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.export-button:active {
-    transform: scale(.97);
-}
-
-.hint {
-    margin: 7px 0 20px;
-    color: #888;
-    font-size: 14px;
-}
-
-/* GRAPH */
-
-.chart {
-    height: 245px;
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
-    border-bottom: 1px solid #ddd;
-    padding: 10px 4px 0;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-
-    scrollbar-width: none;
-}
-
-.chart::-webkit-scrollbar {
-    display: none;
-}
-
-.month-column {
-    flex: 0 0 calc(25% - 10px);
-    min-width: calc(25% - 10px);
-
-    height: 100%;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-
-    scroll-snap-align: start;
-}
-
-.bar-area {
-    width: 100%;
-    height: 185px;
-
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-}
-
-.month-bar {
-    width: min(65px, 65%);
-    min-height: 5px;
-
-    background: #111;
-
-    border: 0;
-    border-radius: 10px 10px 2px 2px;
-
-    transition: height .35s ease;
-
-    padding: 0;
-}
-
-.month-bar:active {
-    transform: scale(.97);
-}
-
-.month-value {
-    font-size: 11px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    white-space: nowrap;
-}
-
-.month-name {
-    margin-top: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #666;
-}
-
-/* MODAL */
-
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    background: rgba(0,0,0,.45);
-    align-items: flex-end;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-box {
-    width: 100%;
-    max-width: 1100px;
-    max-height: 94vh;
-    background: white;
-    border-radius: 28px 28px 0 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    padding: 20px 22px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-title {
-    margin: 0;
-    font-size: 25px;
-    font-weight: 800;
-}
-
-.close {
-    width: 42px;
-    height: 42px;
-    border: 0;
-    border-radius: 50%;
-    background: #eee;
-    font-size: 25px;
-}
-
-.table-container {
-    overflow-x: auto;
-    overflow-y: auto;
-}
-
-table {
-    width: 100%;
-    min-width: 650px;
-    border-collapse: collapse;
-}
-
-th {
-    position: sticky;
-    top: 0;
-    background: white;
-    text-align: left;
-    padding: 14px 10px;
-    color: #777;
-    font-size: 13px;
-    border-bottom: 1px solid #ddd;
-}
-
-td {
-    padding: 14px 10px;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
-.amount-cell {
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.category {
-    display: inline-block;
-    background: #eeeeee;
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.delete {
-    border: 0;
-    background: #f1f1f1;
-    color: #d22;
-    padding: 7px 10px;
-    border-radius: 9px;
-}
-
-.modal-footer {
-    padding: 18px 22px;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.footer-label {
-    color: #777;
-    font-size: 14px;
-}
-
-.footer-total {
-    font-size: 27px;
-    font-weight: 800;
-}
-
-/* EMPTY */
-
-.empty {
-    text-align: center;
-    padding: 35px;
-    color: #888;
-}
-
-.empty-icon {
-    font-size: 40px;
-    margin-bottom: 8px;
-}
-
-/* TOAST */
-
-.toast {
-    position: fixed;
-    z-index: 2000;
-    left: 50%;
-    bottom: 25px;
-    transform: translate(-50%,100px);
-    background: #111;
-    color: white;
-    padding: 13px 20px;
-    border-radius: 30px;
-    opacity: 0;
-    transition: .3s;
-    white-space: nowrap;
-}
-
-.toast.show {
-    transform: translate(-50%,0);
-    opacity: 1;
-}
-
-/* MOBILE */
-
-@media (max-width: 650px) {
-
-    .app {
-        padding: 28px 14px 45px;
-    }
-
-    .title {
-        font-size: 32px;
-    }
-
-    .subtitle {
-        font-size: 16px;
-    }
-
-    .card,
-    .total-card {
-        padding: 22px 20px;
-        border-radius: 23px;
-    }
-
-    .total {
-        font-size: 37px;
-    }
-
-    .card-title {
-        font-size: 26px;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .full {
-        grid-column: auto;
-    }
-
-    .chart {
-        height: 220px;
-        gap: 7px;
-    }
-
-    .month-column {
-        flex: 0 0 calc(25% - 7px);
-        min-width: calc(25% - 7px);
-    }
-
-    .bar-area {
-        height: 170px;
-    }
-
-    .month-value {
-        font-size: 9px;
-    }
-
-    .month-name {
-        font-size: 11px;
-    }
-
-    .monthly-title-row {
-        align-items: flex-start;
-    }
-
-    .export-button {
-        padding: 9px 11px;
-        font-size: 12px;
-    }
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- APP ICON -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <title>My Expenses</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f5f6f8;
+            color: #222;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 18px;
+        }
+
+        h1 {
+            margin: 5px 0 20px;
+            font-size: 30px;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d7d9dd;
+            border-radius: 11px;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        button {
+            border: none;
+            border-radius: 11px;
+            padding: 13px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            width: 100%;
+            margin-top: 16px;
+            background: #111;
+            color: white;
+        }
+
+        .excel-btn {
+            width: 100%;
+            background: #1f8f4c;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+
+        .total {
+            font-size: 34px;
+            font-weight: 800;
+        }
+
+        .chart-wrapper {
+            margin-top: 10px;
+        }
+
+        .chart {
+            height: 245px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 4px 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .chart::-webkit-scrollbar {
+            display: none;
+        }
+
+        .month-column {
+            flex: 0 0 calc(25% - 10px);
+            min-width: calc(25% - 10px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            scroll-snap-align: start;
+            cursor: pointer;
+        }
+
+        .bar-area {
+            height: 185px;
+            width: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .bar {
+            width: 55%;
+            min-height: 3px;
+            background: #111;
+            border-radius: 8px 8px 2px 2px;
+            transition: height 0.3s ease;
+        }
+
+        .month-amount {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .month-name {
+            font-size: 12px;
+            color: #555;
+            margin-top: 8px;
+            white-space: nowrap;
+        }
+
+        .hint {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #888;
+            padding: 25px 5px;
+        }
+
+        .expense-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .expense-row:last-child {
+            border-bottom: none;
+        }
+
+        .expense-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .expense-category {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .expense-note {
+            color: #777;
+            font-size: 13px;
+            margin-top: 3px;
+            word-break: break-word;
+        }
+
+        .expense-date {
+            color: #888;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .expense-amount {
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .delete-btn {
+            background: #f1f1f1;
+            color: #d11;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .month-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            margin-top: 10px;
+            border-top: 2px solid #eee;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 700px;
+            margin: 30px auto;
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .close-btn {
+            background: #eee;
+            padding: 8px 12px;
+            font-size: 18px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 13px;
+            }
+
+            h1 {
+                font-size: 27px;
+            }
+
+            .month-column {
+                flex: 0 0 calc(25% - 9px);
+                min-width: calc(25% - 9px);
+            }
+
+            .bar {
+                width: 65%;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
 
-    <!-- HEADER -->
-
-    <header class="header">
-
-        <h1 class="title">
-            💰 My Expenses
-        </h1>
-
-        <p class="subtitle">
-            Daily expense tracker
-        </p>
-
-    </header>
-
-
-    <!-- TOTAL -->
-
-    <section class="total-card">
-
-        <div class="total-label">
-            Total This Month
-        </div>
-
-        <div
-            id="total"
-            class="total"
-        >
-            AED 0.00
-        </div>
-
-    </section>
-
+    <h1>My Expenses</h1>
 
     <!-- QUICK ADD -->
+    <div class="card">
+        <h2>Quick Add Expense</h2>
 
-    <section class="card">
+        <label for="amount">Amount (AED)</label>
+        <input
+            type="number"
+            id="amount"
+            placeholder="Enter amount"
+            step="0.01"
+            min="0"
+        >
 
-        <h2 class="card-title">
-            ⚡ Quick Add Expense
-        </h2>
+        <label for="category">Type</label>
+        <select id="category">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Rent">Rent</option>
+            <option value="Bills">Bills</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
+        </select>
 
-        <form id="expenseForm">
+        <label for="dateTime">Date & Time</label>
+        <input type="datetime-local" id="dateTime">
 
-            <div class="form-grid">
+        <label for="note">Note (Optional)</label>
+        <textarea
+            id="note"
+            placeholder="Add a note..."
+        ></textarea>
 
-                <!-- AMOUNT -->
+        <button class="add-btn" onclick="addExpense()">
+            + Add Expense
+        </button>
+    </div>
 
-                <div class="form-group">
-
-                    <label>
-                        Amount (AED)
-                    </label>
-
-                    <input
-                        id="amount"
-                        type="number"
-                        inputmode="decimal"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        required
-                    >
-
-                </div>
-
-
-                <!-- TYPE -->
-
-                <div class="form-group">
-
-                    <label>
-                        Type
-                    </label>
-
-                    <select id="category">
-
-                        <option value="Food">
-                            🍔 Food
-                        </option>
-
-                        <option value="Transport">
-                            🚗 Transport
-                        </option>
-
-                        <option value="Rent">
-                            🏠 Rent
-                        </option>
-
-                        <option value="Shopping">
-                            🛍️ Shopping
-                        </option>
-
-                        <option value="Bills">
-                            📄 Bills
-                        </option>
-
-                        <option value="Entertainment">
-                            🎬 Entertainment
-                        </option>
-
-                        <option value="Health">
-                            💊 Health
-                        </option>
-
-                        <option value="Other">
-                            📦 Other
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- DATE AND TIME -->
-
-                <div class="form-group full">
-
-                    <label>
-                        Date & Time
-                    </label>
-
-                    <div class="datetime-row">
-
-                        <input
-                            id="dateTime"
-                            type="datetime-local"
-                            required
-                        >
-
-                        <button
-                            type="button"
-                            class="reset-time"
-                            id="resetTime"
-                            title="Use current date and time"
-                        >
-                            ↻
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="currentTime"
-                        class="current-time"
-                    ></div>
-
-                </div>
-
-
-                <!-- NOTE -->
-
-                <div class="form-group full">
-
-                    <label>
-                        Note
-                        <span style="color:#999;font-weight:400">
-                            (optional)
-                        </span>
-                    </label>
-
-                    <textarea
-                        id="note"
-                        placeholder="What did you spend on?"
-                    ></textarea>
-
-                </div>
-
-            </div>
-
-
-            <button
-                type="submit"
-                class="add-button"
-            >
-                Add Expense
-            </button>
-
-        </form>
-
-    </section>
-
+    <!-- CURRENT MONTH TOTAL -->
+    <div class="card">
+        <div class="total-label">Current Month Total</div>
+        <div class="total" id="currentMonthTotal">AED 0.00</div>
+    </div>
 
     <!-- MONTHLY GRAPH -->
+    <div class="card">
+        <h2>Monthly Expenses</h2>
 
-    <section class="card">
-
-        <div class="monthly-title-row">
-
-            <h2 class="card-title">
-                📊 Monthly Expenses
-            </h2>
-
-            <button
-                id="exportExcel"
-                class="export-button"
-                type="button"
-            >
-                📥 Excel
-            </button>
-
+        <div class="chart-wrapper">
+            <div class="chart" id="chart"></div>
         </div>
 
-        <p class="hint">
-            Swipe left or right • Tap a month to see complete details
-        </p>
-
-        <div
-            id="chart"
-            class="chart"
-        ></div>
-
-    </section>
-
-</div>
-
-
-<!-- MONTH DETAIL -->
-
-<div
-    id="modal"
-    class="modal"
->
-
-    <div class="modal-box">
-
-        <div class="modal-header">
-
-            <h2
-                id="modalTitle"
-                class="modal-title"
-            >
-                September 2026
-            </h2>
-
-            <button
-                id="closeModal"
-                class="close"
-            >
-                ×
-            </button>
-
+        <div class="hint">
+            Swipe left or right • Tap a month for details
         </div>
+    </div>
 
-
-        <div
-            id="tableContainer"
-            class="table-container"
-        ></div>
-
-
-        <div class="modal-footer">
-
-            <div>
-
-                <div class="footer-label">
-                    Total Expense
-                </div>
-
-                <div
-                    id="modalTotal"
-                    class="footer-total"
-                >
-                    AED 0.00
-                </div>
-
-            </div>
-
-        </div>
-
+    <!-- EXCEL -->
+    <div class="card">
+        <button class="excel-btn" onclick="exportToExcel()">
+            📊 Export to Excel
+        </button>
     </div>
 
 </div>
 
+<!-- MONTH DETAILS MODAL -->
+<div class="modal" id="monthModal">
+    <div class="modal-content">
 
-<div
-    id="toast"
-    class="toast"
-></div>
+        <div class="modal-header">
+            <h2 id="modalTitle">Month Details</h2>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
 
+        <div id="monthExpenses"></div>
+
+    </div>
+</div>
 
 <script>
 
-/* =====================================================
-   STORAGE
-===================================================== */
+    const STORAGE_KEY = "my_expenses_data";
 
-const STORAGE_KEY = "my_expenses_data";
-
-let expenses = [];
+    let expenses = JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || "[]"
+    );
 
 
-/* =====================================================
-   LOAD DATA
-===================================================== */
+    /* -------------------------
+       SAVE DATA
+    ------------------------- */
 
-function loadExpenses() {
-
-    try {
-
-        const saved =
-            localStorage.getItem(STORAGE_KEY);
-
-        if (saved) {
-
-            expenses = JSON.parse(saved);
-
-        } else {
-
-            expenses = [];
-
-        }
-
-    } catch (error) {
-
-        console.log(error);
-
-        expenses = [];
-
+    function saveExpenses() {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(expenses)
+        );
     }
 
-}
 
+    /* -------------------------
+       CURRENT DATE & TIME
+    ------------------------- */
 
-/* =====================================================
-   SAVE DATA
-===================================================== */
+    function setCurrentDateTime() {
 
-function saveExpenses() {
+        const now = new Date();
 
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(expenses)
-    );
-
-}
-
-
-/* =====================================================
-   DATE / TIME
-===================================================== */
-
-function pad(number) {
-
-    return String(number).padStart(2, "0");
-
-}
-
-
-function getNowDateTime() {
-
-    const now = new Date();
-
-    return (
-        now.getFullYear() +
-        "-" +
-        pad(now.getMonth() + 1) +
-        "-" +
-        pad(now.getDate()) +
-        "T" +
-        pad(now.getHours()) +
-        ":" +
-        pad(now.getMinutes())
-    );
-
-}
-
-
-function setCurrentDateTime() {
-
-    document.getElementById(
-        "dateTime"
-    ).value = getNowDateTime();
-
-    updateCurrentTimeText();
-
-}
-
-
-function updateCurrentTimeText() {
-
-    const now = new Date();
-
-    document.getElementById(
-        "currentTime"
-    ).textContent =
-        "Current: " +
-        now.toLocaleString(
-            "en-US",
-            {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "numeric",
-                minute: "2-digit"
-            }
-        );
-
-}
-
-
-/* =====================================================
-   FORMAT MONEY
-===================================================== */
-
-function money(value) {
-
-    return (
-        "AED " +
-        Number(value).toLocaleString(
-            "en-US",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }
-        )
-    );
-
-}
-
-
-/* =====================================================
-   MONTH KEY
-===================================================== */
-
-function getMonthKey(dateString) {
-
-    const date =
-        new Date(dateString);
-
-    return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1)
-    );
-
-}
-
-
-function getCurrentMonthKey() {
-
-    return getMonthKey(
-        new Date().toISOString()
-    );
-
-}
-
-
-/* =====================================================
-   MONTH NAME
-===================================================== */
-
-function getMonthName(key) {
-
-    const parts = key.split("-");
-
-    const date =
-        new Date(
-            Number(parts[0]),
-            Number(parts[1]) - 1,
-            1
-        );
-
-    return date.toLocaleDateString(
-        "en-US",
-        {
-            month: "long",
-            year: "numeric"
-        }
-    );
-
-}
-
-
-/* =====================================================
-   GET ALL MONTHS
-===================================================== */
-
-function getAllMonths() {
-
-    const months = [];
-
-    const now = new Date();
-
-    /*
-       If there are no expenses yet,
-       show the current month.
-    */
-
-    if (expenses.length === 0) {
-
-        return [
-            getMonthKey(
-                now.toISOString()
+        const localDate =
+            new Date(
+                now.getTime() -
+                now.getTimezoneOffset() * 60000
             )
-        ];
+            .toISOString()
+            .slice(0, 16);
 
+        document.getElementById("dateTime").value = localDate;
     }
 
 
-    /*
-       Find earliest expense date.
-    */
+    /* -------------------------
+       ADD EXPENSE
+    ------------------------- */
 
-    let earliest =
-        new Date(
-            expenses[0].dateTime
-        );
+    function addExpense() {
+
+        const amountInput =
+            document.getElementById("amount");
+
+        const category =
+            document.getElementById("category").value;
+
+        const dateTime =
+            document.getElementById("dateTime").value;
+
+        const note =
+            document.getElementById("note").value.trim();
+
+        const amount =
+            parseFloat(amountInput.value);
 
 
-    expenses.forEach(
-        expense => {
+        if (!amount || amount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
 
-            const date =
-                new Date(
-                    expense.dateTime
-                );
+        if (!dateTime) {
+            alert("Please select date and time.");
+            return;
+        }
 
-            if (
-                date < earliest
-            ) {
 
-                earliest = date;
+        const expense = {
 
+            id: Date.now(),
+
+            amount:
+                Number(amount.toFixed(2)),
+
+            category:
+
+                category,
+
+            dateTime:
+
+                dateTime,
+
+            note:
+
+                note
+
+        };
+
+
+        expenses.push(expense);
+
+        saveExpenses();
+
+
+        amountInput.value = "";
+
+        document.getElementById("note").value = "";
+
+        setCurrentDateTime();
+
+        renderAll();
+
+
+        alert("Expense added successfully.");
+    }
+
+
+    /* -------------------------
+       FORMAT MONEY
+    ------------------------- */
+
+    function formatMoney(amount) {
+
+        return "AED " +
+            Number(amount).toFixed(2);
+    }
+
+
+    /* -------------------------
+       MONTH KEY
+    ------------------------- */
+
+    function getMonthKey(date) {
+
+        const year =
+            date.getFullYear();
+
+        const month =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+
+        return `${year}-${month}`;
+    }
+
+
+    /* -------------------------
+       MONTH NAME
+    ------------------------- */
+
+    function getMonthName(monthKey) {
+
+        const parts =
+            monthKey.split("-");
+
+        const year =
+            parseInt(parts[0]);
+
+        const month =
+            parseInt(parts[1]) - 1;
+
+        const date =
+            new Date(
+                year,
+                month,
+                1
+            );
+
+        return date.toLocaleString(
+            "en-US",
+            {
+                month: "short",
+                year: "numeric"
             }
-
-        }
-    );
-
-
-    /*
-       Start from earliest expense
-       and continue through current month.
-    */
-
-    let year =
-        earliest.getFullYear();
-
-    let month =
-        earliest.getMonth();
-
-
-    const currentYear =
-        now.getFullYear();
-
-    const currentMonth =
-        now.getMonth();
-
-
-    while (
-        year < currentYear ||
-        (
-            year === currentYear &&
-            month <= currentMonth
-        )
-    ) {
-
-        months.push(
-            year +
-            "-" +
-            pad(month + 1)
         );
-
-
-        month++;
-
-
-        if (month > 11) {
-
-            month = 0;
-
-            year++;
-
-        }
-
     }
 
 
-    return months;
+    /* -------------------------
+       GET ALL MONTHS
+    ------------------------- */
 
-}
+    function getAllMonths() {
 
+        const months = [];
 
-/* =====================================================
-   MONTH TOTAL
-===================================================== */
+        const now = new Date();
 
-function getMonthTotal(key) {
-
-    return expenses
-        .filter(
-            expense =>
-                getMonthKey(
-                    expense.dateTime
-                ) === key
-        )
-        .reduce(
-            (total, expense) =>
-                total +
-                Number(expense.amount),
-            0
-        );
-
-}
+        let startDate;
 
 
-/* =====================================================
-   CURRENT MONTH TOTAL
-===================================================== */
+        if (expenses.length === 0) {
 
-function renderTotal() {
-
-    const total =
-        getMonthTotal(
-            getCurrentMonthKey()
-        );
-
-    document.getElementById(
-        "total"
-    ).textContent =
-        money(total);
-
-}
-
-
-/* =====================================================
-   MONTHLY GRAPH
-===================================================== */
-
-function renderChart() {
-
-    const chart =
-        document.getElementById(
-            "chart"
-        );
-
-    chart.innerHTML = "";
-
-
-    const months =
-        getAllMonths();
-
-
-    const totals =
-        months.map(
-            month =>
-                getMonthTotal(month)
-        );
-
-
-    const max =
-        Math.max(
-            ...totals,
-            1
-        );
-
-
-    months.forEach(
-        (month, index) => {
-
-            const total =
-                totals[index];
-
-
-            const parts =
-                month.split("-");
-
-
-            const date =
+            startDate =
                 new Date(
-                    Number(parts[0]),
-                    Number(parts[1]) - 1,
+                    now.getFullYear(),
+                    now.getMonth(),
                     1
                 );
 
+        } else {
 
-            const shortMonth =
-                date.toLocaleDateString(
-                    "en-US",
-                    {
-                        month: "short"
+            const dates =
+                expenses.map(
+                    e => new Date(e.dateTime)
+                );
+
+            const earliest =
+                new Date(
+                    Math.min(
+                        ...dates.map(
+                            d => d.getTime()
+                        )
+                    )
+                );
+
+            startDate =
+                new Date(
+                    earliest.getFullYear(),
+                    earliest.getMonth(),
+                    1
+                );
+        }
+
+
+        const endDate =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
+            );
+
+
+        while (startDate <= endDate) {
+
+            months.push(
+                getMonthKey(startDate)
+            );
+
+            startDate.setMonth(
+                startDate.getMonth() + 1
+            );
+        }
+
+
+        return months;
+    }
+
+
+    /* -------------------------
+       MONTH TOTAL
+    ------------------------- */
+
+    function getMonthTotal(monthKey) {
+
+        return expenses
+            .filter(
+                e =>
+                    getMonthKey(
+                        new Date(e.dateTime)
+                    ) === monthKey
+            )
+            .reduce(
+                (sum, e) =>
+                    sum + Number(e.amount),
+                0
+            );
+    }
+
+
+    /* -------------------------
+       CURRENT MONTH TOTAL
+    ------------------------- */
+
+    function renderCurrentMonthTotal() {
+
+        const currentMonth =
+            getMonthKey(new Date());
+
+        const total =
+            getMonthTotal(currentMonth);
+
+        document.getElementById(
+            "currentMonthTotal"
+        ).textContent =
+            formatMoney(total);
+    }
+
+
+    /* -------------------------
+       RENDER CHART
+    ------------------------- */
+
+    function renderChart() {
+
+        const chart =
+            document.getElementById("chart");
+
+        chart.innerHTML = "";
+
+
+        const months =
+            getAllMonths();
+
+
+        const totals =
+            months.map(
+                month => getMonthTotal(month)
+            );
+
+
+        const maxTotal =
+            Math.max(...totals, 1);
+
+
+        months.forEach(
+            (monthKey, index) => {
+
+                const total =
+                    totals[index];
+
+
+                const column =
+                    document.createElement("div");
+
+                column.className =
+                    "month-column";
+
+
+                const amount =
+                    document.createElement("div");
+
+                amount.className =
+                    "month-amount";
+
+                amount.textContent =
+                    total > 0
+                        ? "AED " +
+                          total.toFixed(0)
+                        : "0";
+
+
+                const barArea =
+                    document.createElement("div");
+
+                barArea.className =
+                    "bar-area";
+
+
+                const bar =
+                    document.createElement("div");
+
+                bar.className =
+                    "bar";
+
+
+                const height =
+                    total > 0
+                        ? Math.max(
+                            5,
+                            (total / maxTotal) * 170
+                        )
+                        : 3;
+
+
+                bar.style.height =
+                    height + "px";
+
+
+                barArea.appendChild(bar);
+
+
+                const monthName =
+                    document.createElement("div");
+
+                monthName.className =
+                    "month-name";
+
+                monthName.textContent =
+                    getMonthName(monthKey);
+
+
+                column.appendChild(amount);
+
+                column.appendChild(barArea);
+
+                column.appendChild(monthName);
+
+
+                column.addEventListener(
+                    "click",
+                    () => openMonthDetails(monthKey)
+                );
+
+
+                chart.appendChild(column);
+
+            }
+        );
+    }
+
+
+    /* -------------------------
+       OPEN MONTH DETAILS
+    ------------------------- */
+
+    function openMonthDetails(monthKey) {
+
+        const modal =
+            document.getElementById("monthModal");
+
+        const title =
+            document.getElementById("modalTitle");
+
+        const container =
+            document.getElementById("monthExpenses");
+
+
+        title.textContent =
+            getMonthName(monthKey);
+
+
+        const monthExpenses =
+            expenses
+                .filter(
+                    e =>
+                        getMonthKey(
+                            new Date(e.dateTime)
+                        ) === monthKey
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.dateTime) -
+                        new Date(a.dateTime)
+                );
+
+
+        container.innerHTML = "";
+
+
+        if (monthExpenses.length === 0) {
+
+            container.innerHTML =
+                '<div class="empty">No expenses for this month.</div>';
+
+        } else {
+
+            monthExpenses.forEach(
+                expense => {
+
+                    const row =
+                        document.createElement("div");
+
+                    row.className =
+                        "expense-row";
+
+
+                    const info =
+                        document.createElement("div");
+
+                    info.className =
+                        "expense-info";
+
+
+                    const category =
+                        document.createElement("div");
+
+                    category.className =
+                        "expense-category";
+
+                    category.textContent =
+                        expense.category;
+
+
+                    const note =
+                        document.createElement("div");
+
+                    note.className =
+                        "expense-note";
+
+                    note.textContent =
+                        expense.note || "";
+
+
+                    const date =
+                        document.createElement("div");
+
+                    date.className =
+                        "expense-date";
+
+                    const dateObj =
+                        new Date(
+                            expense.dateTime
+                        );
+
+
+                    date.textContent =
+                        dateObj.toLocaleString(
+                            "en-US",
+                            {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }
+                        );
+
+
+                    info.appendChild(category);
+
+                    if (expense.note) {
+                        info.appendChild(note);
                     }
-                );
+
+                    info.appendChild(date);
 
 
-            const column =
-                document.createElement(
-                    "div"
-                );
-
-            column.className =
-                "month-column";
+                    const right =
+                        document.createElement("div");
 
 
-            const amount =
-                document.createElement(
-                    "div"
-                );
+                    const amount =
+                        document.createElement("div");
 
-            amount.className =
-                "month-value";
+                    amount.className =
+                        "expense-amount";
 
-            amount.textContent =
-                money(total);
-
-
-            const barArea =
-                document.createElement(
-                    "div"
-                );
-
-            barArea.className =
-                "bar-area";
+                    amount.textContent =
+                        formatMoney(
+                            expense.amount
+                        );
 
 
-            const bar =
-                document.createElement(
-                    "button"
-                );
+                    const deleteButton =
+                        document.createElement("button");
 
-            bar.className =
-                "month-bar";
+                    deleteButton.className =
+                        "delete-btn";
+
+                    deleteButton.textContent =
+                        "Delete";
 
 
-            const height =
-                total === 0
-                    ? 5
-                    : Math.max(
-                        10,
-                        (total / max) *
-                        165
+                    deleteButton.onclick =
+                        function() {
+
+                            deleteExpense(
+                                expense.id
+                            );
+
+                        };
+
+
+                    right.appendChild(amount);
+
+                    right.appendChild(
+                        deleteButton
                     );
 
 
-            bar.style.height =
-                height + "px";
+                    row.appendChild(info);
+
+                    row.appendChild(right);
 
 
-            bar.title =
-                "Open " +
-                getMonthName(month);
-
-
-            bar.addEventListener(
-                "click",
-                function() {
-
-                    openMonth(month);
+                    container.appendChild(row);
 
                 }
             );
 
 
-            barArea.appendChild(
-                bar
-            );
-
-
-            const name =
-                document.createElement(
-                    "div"
+            const total =
+                monthExpenses.reduce(
+                    (sum, e) =>
+                        sum + Number(e.amount),
+                    0
                 );
 
-            name.className =
-                "month-name";
 
-            name.textContent =
-                shortMonth;
+            const totalRow =
+                document.createElement("div");
 
+            totalRow.className =
+                "month-total";
 
-            column.appendChild(
-                amount
-            );
 
-            column.appendChild(
-                barArea
-            );
-
-            column.appendChild(
-                name
-            );
-
-
-            chart.appendChild(
-                column
-            );
-
-        }
-    );
-
-
-    /*
-       Automatically scroll to the
-       most recent/current month.
-    */
-
-    setTimeout(
-        function() {
-
-            chart.scrollLeft =
-                chart.scrollWidth;
-
-        },
-        50
-    );
-
-}
-
-
-/* =====================================================
-   OPEN MONTH
-===================================================== */
-
-function openMonth(month) {
-
-    const modal =
-        document.getElementById(
-            "modal"
-        );
-
-    const title =
-        document.getElementById(
-            "modalTitle"
-        );
-
-    const tableContainer =
-        document.getElementById(
-            "tableContainer"
-        );
-
-    const modalTotal =
-        document.getElementById(
-            "modalTotal"
-        );
-
-
-    title.textContent =
-        getMonthName(month);
-
-
-    const monthExpenses =
-        expenses
-            .filter(
-                expense =>
-                    getMonthKey(
-                        expense.dateTime
-                    ) === month
-            )
-            .sort(
-                (a,b) =>
-                    new Date(
-                        b.dateTime
-                    ) -
-                    new Date(
-                        a.dateTime
-                    )
-            );
-
-
-    const total =
-        getMonthTotal(month);
-
-
-    modalTotal.textContent =
-        money(total);
-
-
-    if (
-        monthExpenses.length === 0
-    ) {
-
-        tableContainer.innerHTML = `
-
-            <div class="empty">
-
-                <div class="empty-icon">
-                    💸
-                </div>
-
-                No expenses recorded
-                for this month.
-
-            </div>
-
-        `;
-
-    } else {
-
-
-        let html = `
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Date
-                        </th>
-
-                        <th>
-                            Time
-                        </th>
-
-                        <th>
-                            Type
-                        </th>
-
-                        <th>
-                            Note
-                        </th>
-
-                        <th>
-                            Amount
-                        </th>
-
-                        <th>
-                            Action
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-        `;
-
-
-        monthExpenses.forEach(
-            expense => {
-
-                const date =
-                    new Date(
-                        expense.dateTime
-                    );
-
-
-                const dateText =
-                    date.toLocaleDateString(
-                        "en-GB",
-                        {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric"
-                        }
-                    );
-
-
-                const timeText =
-                    date.toLocaleTimeString(
-                        "en-US",
-                        {
-                            hour: "numeric",
-                            minute: "2-digit"
-                        }
-                    );
-
-
-                html += `
-
-                    <tr>
-
-                        <td>
-                            ${dateText}
-                        </td>
-
-                        <td>
-                            ${timeText}
-                        </td>
-
-                        <td>
-
-                            <span
-                                class="category"
-                            >
-                                ${escapeHTML(
-                                    expense.category
-                                )}
-                            </span>
-
-                        </td>
-
-                        <td>
-                            ${
-                                expense.note
-                                ?
-                                escapeHTML(
-                                    expense.note
-                                )
-                                :
-                                "—"
-                            }
-                        </td>
-
-                        <td
-                            class="amount-cell"
-                        >
-                            ${money(
-                                expense.amount
-                            )}
-                        </td>
-
-                        <td>
-
-                            <button
-                                class="delete"
-                                onclick="deleteExpense(
-                                    '${expense.id}',
-                                    '${month}'
-                                )"
-                            >
-                                Delete
-                            </button>
-
-                        </td>
-
-                    </tr>
-
+            totalRow.innerHTML =
+                `
+                    <span>Month Total</span>
+                    <span>${formatMoney(total)}</span>
                 `;
 
-            }
-        );
+
+            container.appendChild(
+                totalRow
+            );
+        }
 
 
-        html += `
-
-                </tbody>
-
-            </table>
-
-        `;
-
-
-        tableContainer.innerHTML =
-            html;
-
+        modal.style.display =
+            "block";
     }
 
 
-    modal.classList.add(
-        "active"
-    );
-
-    document.body.style.overflow =
-        "hidden";
-
-}
-
-
-/* =====================================================
-   DELETE EXPENSE
-===================================================== */
-
-function deleteExpense(
-    id,
-    month
-) {
-
-    const expense =
-        expenses.find(
-            item =>
-                String(item.id) ===
-                String(id)
-        );
-
-
-    if (!expense) {
-        return;
-    }
-
-
-    const confirmDelete =
-        confirm(
-            "Delete this expense of " +
-            money(expense.amount) +
-            "?"
-        );
-
-
-    if (!confirmDelete) {
-        return;
-    }
-
-
-    expenses =
-        expenses.filter(
-            item =>
-                String(item.id) !==
-                String(id)
-        );
-
-
-    saveExpenses();
-
-
-    renderTotal();
-
-    renderChart();
-
-    openMonth(month);
-
-    showToast(
-        "Expense deleted"
-    );
-
-}
-
-
-/* =====================================================
-   ADD EXPENSE
-===================================================== */
-
-function addExpense(event) {
-
-    event.preventDefault();
-
-
-    const amount =
-        Number(
-            document.getElementById(
-                "amount"
-            ).value
-        );
-
-
-    const category =
-        document.getElementById(
-            "category"
-        ).value;
-
-
-    const dateTime =
-        document.getElementById(
-            "dateTime"
-        ).value;
-
-
-    const note =
-        document.getElementById(
-            "note"
-        ).value.trim();
-
-
-    if (
-        !amount ||
-        amount <= 0
-    ) {
-
-        showToast(
-            "Please enter an amount"
-        );
-
-        return;
-
-    }
-
-
-    if (!dateTime) {
-
-        showToast(
-            "Please select date and time"
-        );
-
-        return;
-
-    }
-
-
-    const newExpense = {
-
-        id:
-            Date.now(),
-
-        amount:
-            Number(
-                amount.toFixed(2)
-            ),
-
-        category:
-            category,
-
-        dateTime:
-            dateTime,
-
-        note:
-            note
-
-    };
-
-
-    expenses.push(
-        newExpense
-    );
-
-    saveExpenses();
-
-
-    document.getElementById(
-        "expenseForm"
-    ).reset();
-
-
-    setCurrentDateTime();
-
-
-    renderTotal();
-
-    renderChart();
-
-
-    showToast(
-        "Expense added ✓"
-    );
-
-
-    document.getElementById(
-        "amount"
-    ).focus();
-
-}
-
-
-/* =====================================================
-   RESET DATE
-===================================================== */
-
-document
-    .getElementById(
-        "resetTime"
-    )
-    .addEventListener(
-        "click",
-        function() {
-
-            setCurrentDateTime();
-
-            showToast(
-                "Date & time set to now"
+    /* -------------------------
+       DELETE EXPENSE
+    ------------------------- */
+
+    function deleteExpense(id) {
+
+        const confirmed =
+            confirm(
+                "Delete this expense?"
             );
 
+
+        if (!confirmed) {
+            return;
         }
-    );
 
 
-/* =====================================================
-   CLOSE MODAL
-===================================================== */
-
-function closeModal() {
-
-    document
-        .getElementById("modal")
-        .classList.remove(
-            "active"
-        );
-
-    document.body.style.overflow =
-        "";
-
-}
+        expenses =
+            expenses.filter(
+                e => e.id !== id
+            );
 
 
-document
-    .getElementById(
-        "closeModal"
-    )
-    .addEventListener(
-        "click",
-        closeModal
-    );
+        saveExpenses();
+
+        renderAll();
 
 
-/* =====================================================
-   CLOSE WHEN TAPPING OUTSIDE
-===================================================== */
+        const modal =
+            document.getElementById(
+                "monthModal"
+            );
 
-document
-    .getElementById(
-        "modal"
-    )
-    .addEventListener(
+        modal.style.display =
+            "none";
+    }
+
+
+    /* -------------------------
+       CLOSE MODAL
+    ------------------------- */
+
+    function closeModal() {
+
+        document.getElementById(
+            "monthModal"
+        ).style.display =
+            "none";
+    }
+
+
+    /* -------------------------
+       CLOSE MODAL OUTSIDE
+    ------------------------- */
+
+    window.addEventListener(
         "click",
         function(event) {
 
-            if (
-                event.target ===
-                this
-            ) {
-
-                closeModal();
-
-            }
-
-        }
-    );
-
-
-/* =====================================================
-   ESCAPE
-===================================================== */
-
-document.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            closeModal();
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   FORM
-===================================================== */
-
-document
-    .getElementById(
-        "expenseForm"
-    )
-    .addEventListener(
-        "submit",
-        addExpense
-    );
-
-
-/* =====================================================
-   HTML SECURITY
-===================================================== */
-
-function escapeHTML(value) {
-
-    return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =====================================================
-   TOAST
-===================================================== */
-
-let toastTimer;
-
-function showToast(message) {
-
-    const toast =
-        document.getElementById(
-            "toast"
-        );
-
-    toast.textContent =
-        message;
-
-    toast.classList.add(
-        "show"
-    );
-
-
-    clearTimeout(
-        toastTimer
-    );
-
-
-    toastTimer =
-        setTimeout(
-            function() {
-
-                toast.classList.remove(
-                    "show"
+            const modal =
+                document.getElementById(
+                    "monthModal"
                 );
 
-            },
-            2200
-        );
+            if (event.target === modal) {
 
-}
-
-
-/* =====================================================
-   EXCEL EXPORT
-===================================================== */
-
-function exportToExcel() {
-
-    /*
-       Make sure the Excel library loaded.
-    */
-
-    if (
-        typeof XLSX === "undefined"
-    ) {
-
-        showToast(
-            "Excel library is not available"
-        );
-
-        return;
-
-    }
+                modal.style.display =
+                    "none";
+            }
+        }
+    );
 
 
-    /*
-       Get every month from the
-       earliest expense to current month.
-    */
+    /* -------------------------
+       EXCEL EXPORT
+    ------------------------- */
 
-    const months =
-        getAllMonths();
+    function exportToExcel() {
 
+        if (expenses.length === 0) {
 
-    /*
-       Create new Excel workbook.
-    */
-
-    const workbook =
-        XLSX.utils.book_new();
-
-
-    /*
-       If there are no expenses,
-       create one empty sheet.
-    */
-
-    if (
-        expenses.length === 0
-    ) {
-
-        const emptyData = [
-
-            [
-                "My Expenses"
-            ],
-
-            [],
-
-            [
-                "No expenses recorded yet."
-            ]
-
-        ];
-
-
-        const sheet =
-            XLSX.utils.aoa_to_sheet(
-                emptyData
+            alert(
+                "There are no expenses to export."
             );
 
-
-        XLSX.utils.book_append_sheet(
-            workbook,
-            sheet,
-            "No Expenses"
-        );
+            return;
+        }
 
 
-    } else {
+        const workbook =
+            XLSX.utils.book_new();
+
+
+        const months =
+            getAllMonths();
 
 
         months.forEach(
-            month => {
-
-                /*
-                   Get expenses for this month.
-                */
+            monthKey => {
 
                 const monthExpenses =
                     expenses
                         .filter(
-                            expense =>
+                            e =>
                                 getMonthKey(
-                                    expense.dateTime
-                                ) === month
+                                    new Date(
+                                        e.dateTime
+                                    )
+                                ) === monthKey
                         )
                         .sort(
-                            (a,b) =>
+                            (a, b) =>
                                 new Date(
                                     a.dateTime
                                 ) -
@@ -2049,160 +1110,107 @@ function exportToExcel() {
                         );
 
 
-                /*
-                   Sheet data.
-                */
-
-                const rows = [];
+                if (monthExpenses.length === 0) {
+                    return;
+                }
 
 
-                /*
-                   Title.
-                */
+                const rows =
+                    monthExpenses.map(
+                        expense => {
 
-                rows.push([
-                    getMonthName(month)
-                ]);
-
-
-                rows.push([]);
+                            const date =
+                                new Date(
+                                    expense.dateTime
+                                );
 
 
-                /*
-                   Column headers.
-                */
+                            return {
 
-                rows.push([
-                    "Date",
-                    "Time",
-                    "Type",
-                    "Note",
-                    "Amount (AED)"
-                ]);
+                                Date:
+                                    date.toLocaleDateString(
+                                        "en-GB"
+                                    ),
 
+                                Time:
+                                    date.toLocaleTimeString(
+                                        "en-US",
+                                        {
+                                            hour: "2-digit",
+                                            minute: "2-digit"
+                                        }
+                                    ),
 
-                /*
-                   Add every expense.
-                */
+                                Type:
+                                    expense.category,
 
-                monthExpenses.forEach(
-                    expense => {
+                                Note:
+                                    expense.note || "",
 
-                        const date =
-                            new Date(
-                                expense.dateTime
-                            );
+                                Amount:
+                                    Number(
+                                        expense.amount
+                                    )
 
+                            };
 
-                        rows.push([
-
-                            date.toLocaleDateString(
-                                "en-GB",
-                                {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric"
-                                }
-                            ),
-
-                            date.toLocaleTimeString(
-                                "en-US",
-                                {
-                                    hour: "numeric",
-                                    minute: "2-digit"
-                                }
-                            ),
-
-                            expense.category,
-
-                            expense.note || "",
-
-                            Number(
-                                expense.amount
-                            )
-
-                        ]);
-
-                    }
-                );
+                        }
+                    );
 
 
-                /*
-                   Blank row before total.
-                */
-
-                rows.push([]);
-
-
-                /*
-                   Monthly total.
-                */
-
-                rows.push([
-                    "",
-                    "",
-                    "",
-                    "TOTAL",
-                    getMonthTotal(month)
-                ]);
+                const total =
+                    monthExpenses.reduce(
+                        (sum, e) =>
+                            sum + Number(e.amount),
+                        0
+                    );
 
 
-                /*
-                   Convert array to worksheet.
-                */
+                rows.push({});
 
-                const sheet =
-                    XLSX.utils.aoa_to_sheet(
+                rows.push({
+
+                    Date: "",
+
+                    Time: "",
+
+                    Type: "",
+
+                    Note: "MONTH TOTAL",
+
+                    Amount: total
+
+                });
+
+
+                const worksheet =
+                    XLSX.utils.json_to_sheet(
                         rows
                     );
 
 
-                /*
-                   Set column widths.
-                */
+                worksheet["!cols"] = [
 
-                sheet["!cols"] = [
+                    { wch: 14 },
 
-                    {
-                        wch: 15
-                    },
+                    { wch: 12 },
 
-                    {
-                        wch: 13
-                    },
+                    { wch: 18 },
 
-                    {
-                        wch: 18
-                    },
+                    { wch: 35 },
 
-                    {
-                        wch: 35
-                    },
-
-                    {
-                        wch: 16
-                    }
+                    { wch: 15 }
 
                 ];
 
 
-                /*
-                   Excel sheet names cannot
-                   contain certain characters.
-                */
-
                 let sheetName =
-                    getMonthName(month)
+                    getMonthName(monthKey)
                         .replace(
-                            /[:\\\/\?\*\[\]]/g,
+                            /[\\\/\?\*\[\]:]/g,
                             ""
                         );
 
-
-                /*
-                   Sheet names have a
-                   maximum of 31 characters.
-                */
 
                 sheetName =
                     sheetName.substring(
@@ -2213,68 +1221,40 @@ function exportToExcel() {
 
                 XLSX.utils.book_append_sheet(
                     workbook,
-                    sheet,
+                    worksheet,
                     sheetName
                 );
 
             }
         );
 
+
+        XLSX.writeFile(
+            workbook,
+            "My Expenses.xlsx"
+        );
     }
 
 
-    /*
-       Download Excel file.
-    */
+    /* -------------------------
+       RENDER EVERYTHING
+    ------------------------- */
 
-    XLSX.writeFile(
-        workbook,
-        "My Expenses.xlsx"
-    );
+    function renderAll() {
 
+        renderCurrentMonthTotal();
 
-    showToast(
-        "Excel exported successfully ✓"
-    );
-
-}
+        renderChart();
+    }
 
 
-/* =====================================================
-   EXCEL BUTTON
-===================================================== */
+    /* -------------------------
+       INITIAL LOAD
+    ------------------------- */
 
-document
-    .getElementById(
-        "exportExcel"
-    )
-    .addEventListener(
-        "click",
-        exportToExcel
-    );
+    setCurrentDateTime();
 
-
-/* =====================================================
-   START
-===================================================== */
-
-loadExpenses();
-
-setCurrentDateTime();
-
-renderTotal();
-
-renderChart();
-
-
-/*
-   Keep current time display fresh.
-*/
-
-setInterval(
-    updateCurrentTimeText,
-    30000
-);
+    renderAll();
 
 </script>
 
